@@ -1,34 +1,103 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-  </head>
-  <body>
-    <div class="container">
-      <h1>Exam Generator</h1>
-      <div class="mb-3">
-        <label for="jsonString" class="form-label">JSON String</label>
-        <textarea class="form-control" id="jsonString" rows="10"></textarea>
-      </div>
-
-      <button type="button" id="btnCreate" class="btn btn-success">Create Exams</button>
-    </div>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
-    
-    <script>
-      $( document ).ready(function() {
-        console.log( "ready!" );
-        $('#btnCreate').click(function() {
-          var plainJson = $('#jsonString').val();
-          var questions = $.parseJSON(plainJson);
-          console.log(questions[0]);
-        });
-      });
-    </script>
-  </body>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bootstrap demo</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+		<style>
+			.form-check-label.true-answer {
+				color: #333;
+			}
+			.form-check-label.true-answer.answer-colored {
+				color: green;
+			}
+			.form-check-label.false-answer.answer-colored {
+				color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Exam Generator</h1>
+			<div class="mb-3">
+				<label for="jsonString" class="form-label">JSON String</label>
+				<textarea class="form-control" id="jsonString" rows="10"></textarea>
+				<div class="card text-bg-light my-3">
+				  <div class="card-header">Example</div>
+				  <div class="card-body">
+					<p class="card-text font-monospace">[{"question":"What is ABC?", "answers":["First answer", "Second answer", "Third answer"], "correctAnswers":[1,2]},
+					{"question":"Lorem Ipsum?", "answers":["Dolor", "Sit", "Amet"], "correctAnswers":[1]}]</p>
+				  </div>
+				</div>
+			</div>
+			
+			<button type="button" id="btnCreate" class="btn btn-success">Create Exams</button>
+			<div id="resultPane" class="py-3">
+			
+			</div>
+		</div>
+		
+		
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+		
+		<script>
+				
+			function toggleColors(e) {
+				var qNumber = e.id.substring(1);
+				$('#q' + qNumber + ' .form-check-label').toggleClass('answer-colored');
+				var plainJson = $('#jsonString').val();
+				var questions = $.parseJSON(plainJson);
+			};
+			
+			$( document ).ready(function() {
+				console.log( "ready!" );
+				$('#btnCreate').click(function() {
+					var plainJson = $('#jsonString').val();
+					var questions = $.parseJSON(plainJson);
+					console.log(questions[0]);
+					shuffleArray(questions);
+					populateResult(questions);
+				});
+				
+				function populateResult(questions) {
+					$('#resultPane').html('');
+					var questionTemplate = '<div class="my-3"><div class="question fw-bold"></div><div class="answers"></div></div>';
+					$.each(questions, function(index, questionObj) {
+						var qNumber = index + 1;
+						var questionHtml = $.parseHTML(questionTemplate);
+						$(questionHtml).attr('id', 'q' + qNumber);
+						//set question text
+						var questionText = qNumber + '. ' + questionObj.question;
+						$(questionHtml).find('.question').html(questionText);
+						
+						//append each answer
+						$.each(questionObj.answers, function(indexAnswer, answerText) {
+							var aNumber = indexAnswer + 1;
+							var answerId = qNumber + '-' + aNumber;
+							var answerStatusClass = questionObj.correctAnswers.includes(aNumber) ? 'true-answer' : 'false-answer';
+							
+							var answerDiv = $.parseHTML('<div class="form-check"><input class="form-check-input" type="checkbox" id="' + answerId + '"><label class="form-check-label ' + answerStatusClass + '" for="' + answerId + '">' + answerText + '</label></div>');
+							$(questionHtml).find('.answers').append(answerDiv);
+						});
+						
+						//append toggle button
+						var toggleBtn = $.parseHTML('<button type="button" onclick="toggleColors(this);" id="b' + qNumber + '" class="btn btn-outline-primary btn-toggle-answer btn-sm mt-1 mb-2">Toggle Answers</button>');
+						$(questionHtml).find('.answers').append(toggleBtn);
+						
+						//append whole question div
+						$('#resultPane').append(questionHtml);
+					});
+				}
+				
+				function shuffleArray(array) {
+					for (let i = array.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[array[i], array[j]] = [array[j], array[i]];
+					}
+				}
+			});
+		</script>
+	</body>
 </html>
