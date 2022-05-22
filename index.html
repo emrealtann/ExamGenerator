@@ -70,7 +70,7 @@
 						$(questionHtml).attr('id', 'q' + qNumber);
 						//set question text
 						var questionText = qNumber + '. ' + questionObj.question;
-						$(questionHtml).find('.question').html(questionText);
+						$(questionHtml).find('.question').text = questionText;
 						
 						//append each answer
 						$.each(questionObj.answers, function(indexAnswer, answerText) {
