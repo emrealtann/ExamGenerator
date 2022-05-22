@@ -61,6 +61,23 @@
 					populateResult(questions);
 				});
 				
+				var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function escapeHtml (string) {
+  return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
+				
 				function populateResult(questions) {
 					$('#resultPane').html('');
 					var questionTemplate = '<div class="my-3"><div class="question fw-bold"></div><div class="answers"></div></div>';
@@ -70,7 +87,7 @@
 						$(questionHtml).attr('id', 'q' + qNumber);
 						//set question text
 						var questionText = qNumber + '. ' + questionObj.question;
-						$(questionHtml).find('.question').text = questionText;
+						$(questionHtml).find('.question').html(escapeHtml(questionText));
 						
 						//append each answer
 						$.each(questionObj.answers, function(indexAnswer, answerText) {
@@ -78,7 +95,7 @@
 							var answerId = qNumber + '-' + aNumber;
 							var answerStatusClass = questionObj.correctAnswers.includes(aNumber) ? 'true-answer' : 'false-answer';
 							
-							var answerDiv = $.parseHTML('<div class="form-check"><input class="form-check-input" type="checkbox" id="' + answerId + '"><label class="form-check-label ' + answerStatusClass + '" for="' + answerId + '">' + answerText + '</label></div>');
+							var answerDiv = $.parseHTML('<div class="form-check"><input class="form-check-input" type="checkbox" id="' + answerId + '"><label class="form-check-label ' + answerStatusClass + '" for="' + answerId + '">' + escapeHtml(answerText) + '</label></div>');
 							$(questionHtml).find('.answers').append(answerDiv);
 						});
 						
